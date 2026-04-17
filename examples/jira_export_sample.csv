@@ -1,17 +1,19 @@
-Issue Key,Summary,Status,Assignee,Priority,Linked Issues
-WEB-101,Refonte du système d'authentification OAuth2,In Progress,Alice Martin,High,
-WEB-102,Migration base de données PostgreSQL 16,In Progress,Bob Durand,Critical,
-WEB-103,Implémenter endpoint /api/login,To Do,Alice Martin,High,WEB-101 blocks this
-WEB-104,Implémenter endpoint /api/logout,To Do,Alice Martin,Medium,WEB-101 blocks this
-WEB-105,Refactoring du module session,To Do,Charlie Leroy,Medium,WEB-103 blocks this
-WEB-106,Migration des tables users,To Do,Bob Durand,High,WEB-102 blocks this
-WEB-107,Migration des tables orders,To Do,Bob Durand,High,WEB-102 blocks this
-WEB-108,Mise à jour de la doc API,To Do,Diane Petit,Low,WEB-103 blocks this
-WEB-109,Tests E2E parcours login,To Do,Eve Moreau,Medium,WEB-105 blocks this
-WEB-110,Tests E2E parcours logout,To Do,Eve Moreau,Medium,WEB-104 blocks this
-WEB-111,Déploiement staging,To Do,Frank Bernard,High,WEB-109 blocks this
-WEB-112,Déploiement production,To Do,Frank Bernard,Critical,WEB-111 blocks this
-WEB-113,Monitoring Grafana dashboards,To Do,Grace Roux,Low,
-WEB-114,Audit sécurité OWASP,To Do,Henri Blanc,High,WEB-112 blocks this
-WEB-115,Formation équipe support,To Do,Irene Noir,Low,
-WEB-116,Nettoyage du code legacy auth,To Do,Charlie Leroy,Low,WEB-105 blocks this
+Résumé,Clé de ticket,Type de ticket,État,Priorité,Personne assignée,Lien du ticket entrant (Blocks),Lien du ticket entrant (Blocks),Lien du ticket entrant (Blocks),Lien de ticket sortant (Blocks),Lien de ticket sortant (Blocks)
+Refonte auth OAuth2 — Epic,WEB-100,Epic,In Progress,High,Alice Martin,,,,,
+Migration PostgreSQL 16 — Epic,WEB-200,Epic,In Progress,Critical,Bob Durand,,,,,
+Refonte du système d'authentification OAuth2,WEB-101,Story,In Progress,High,Alice Martin,,,,WEB-103,WEB-104
+Migration base de données PostgreSQL 16,WEB-102,Story,In Progress,Critical,Bob Durand,,,,WEB-106,WEB-107
+Implémenter endpoint /api/login,WEB-103,Task,To Do,High,Alice Martin,WEB-101,,,WEB-105,WEB-108
+Implémenter endpoint /api/logout,WEB-104,Task,To Do,Medium,Alice Martin,WEB-101,,,WEB-110,
+Refactoring du module session,WEB-105,Task,To Do,Medium,Charlie Leroy,WEB-103,,,WEB-109,WEB-116
+Migration des tables users,WEB-106,Task,To Do,High,Bob Durand,WEB-102,,,,
+Migration des tables orders,WEB-107,Task,To Do,High,Bob Durand,WEB-102,,,,
+Mise à jour de la doc API,WEB-108,Task,To Do,Low,Diane Petit,WEB-103,,,,
+Tests E2E parcours login,WEB-109,Test,To Do,Medium,Eve Moreau,WEB-105,,,WEB-111,
+Tests E2E parcours logout,WEB-110,Test,To Do,Medium,Eve Moreau,WEB-104,,,,
+Déploiement staging,WEB-111,Task,To Do,High,Frank Bernard,WEB-109,,,WEB-112,
+Déploiement production,WEB-112,Task,To Do,Critical,Frank Bernard,WEB-111,,,WEB-114,
+Monitoring Grafana dashboards,WEB-113,Task,To Do,Low,Grace Roux,,,,,
+Audit sécurité OWASP,WEB-114,Task,To Do,High,Henri Blanc,WEB-112,,,,
+Formation équipe support,WEB-115,Task,To Do,Low,Irene Noir,,,,,
+Nettoyage du code legacy auth,WEB-116,Task,To Do,Low,Charlie Leroy,WEB-105,,,,

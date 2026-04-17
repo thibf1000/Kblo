@@ -51,8 +51,14 @@ class Ticket:
 
     key: str
     summary: str
+    issue_type: str = ""                                 # ex: "Epic", "Story", "Task"
     blocks: list[str] = field(default_factory=list)      # clés bloquées par ce ticket
     blocked_by: list[str] = field(default_factory=list)  # clés qui bloquent ce ticket
+
+    @property
+    def is_epic(self) -> bool:
+        """True si le ticket est de type Epic (insensible à la casse)."""
+        return self.issue_type.strip().lower() == "epic"
 
 
 @dataclass
@@ -81,11 +87,20 @@ def _find_column(columns: list[str], candidates: list[str]) -> str | None:
 
 
 def _find_link_columns(columns: list[str]) -> list[str]:
-    """Renvoie toutes les colonnes susceptibles de contenir des liens blocks/blocked."""
+    """Renvoie toutes les colonnes susceptibles de contenir des liens blocks/blocked.
+
+    Capture à la fois les formats anglais (``Outward issue link (Blocks)``,
+    ``Blocks``, ``Is blocked by``…) et français (``Lien du ticket entrant
+    (Blocks)``, ``Lien de ticket sortant (Blocks)``…) et leurs doublons
+    renommés par pandas (``.1``, ``.2``, ``_2``…).
+
+    Les autres types de liens (``Cloners``, ``Parent-Child``, ``Relates``…)
+    sont volontairement ignorés : Kblo ne modélise que les blocages.
+    """
     hits: list[str] = []
     for c in columns:
         low = c.strip().lower()
-        if "block" in low:  # capture "Blocks", "Blocked By", "Outward issue link (Blocks)"
+        if "block" in low:  # capture toute variante EN/FR contenant "Block(s)"
             hits.append(c)
         elif low in ("linked issues", "linked issue"):
             hits.append(c)
@@ -95,16 +110,30 @@ def _find_link_columns(columns: list[str]) -> list[str]:
 def _classify_link_column(col_name: str) -> str | None:
     """Détermine si une colonne représente des "blocks" ou "blocked by".
 
+    Support EN et FR :
+    - ``Inward`` / ``entrant`` / ``is blocked by`` → ``blocked_by``
+    - ``Outward`` / ``sortant`` / ``blocks`` → ``blocks``
+
     Returns:
         ``"blocks"``, ``"blocked_by"`` ou ``None`` si on ne peut pas trancher
         (colonne générique type ``Linked Issues`` qu'il faudra parser ligne
         à ligne).
     """
     low = col_name.lower()
-    if "blocked by" in low or "blocked-by" in low or "inward" in low and "block" in low:
+
+    # Direction "entrante" → ce ticket est bloqué PAR la clé de la cellule.
+    if (
+        "blocked by" in low
+        or "blocked-by" in low
+        or "entrant" in low
+        or "inward" in low
+    ):
         return "blocked_by"
-    if "blocks" in low or "outward" in low and "block" in low:
+
+    # Direction "sortante" → ce ticket bloque la clé de la cellule.
+    if "sortant" in low or "outward" in low or "blocks" in low:
         return "blocks"
+
     return None
 
 
@@ -189,15 +218,19 @@ def parse_jira_csv(path: Path, encoding: str = "utf-8") -> ParseReport:
         raise KbloValidationError("Le fichier CSV ne contient aucune ligne de données.")
 
     columns = list(df.columns)
-    key_col = _find_column(columns, ["issue key", "key"])
-    summary_col = _find_column(columns, ["summary", "title"])
+    # Clé de ticket : EN ou FR.
+    key_col = _find_column(columns, ["issue key", "key", "clé de ticket", "cle de ticket"])
+    # Résumé : EN ou FR.
+    summary_col = _find_column(columns, ["summary", "title", "résumé", "resume"])
+    # Type de ticket : EN ou FR (facultatif, utilisé pour colorer les Epics).
+    type_col = _find_column(columns, ["issue type", "type", "type de ticket"])
     link_cols = _find_link_columns(columns)
 
     missing: list[str] = []
     if not key_col:
-        missing.append("Issue Key")
+        missing.append("Clé de ticket / Issue Key")
     if not summary_col:
-        missing.append("Summary")
+        missing.append("Résumé / Summary")
 
     if missing:
         raise KbloValidationError(
@@ -230,6 +263,7 @@ def parse_jira_csv(path: Path, encoding: str = "utf-8") -> ParseReport:
         seen_keys.add(key)
 
         summary = str(row[summary_col]).strip()
+        issue_type = str(row[type_col]).strip() if type_col else ""
 
         blocks: list[str] = []
         blocked_by: list[str] = []
@@ -255,7 +289,13 @@ def parse_jira_csv(path: Path, encoding: str = "utf-8") -> ParseReport:
         blocked_by = list(dict.fromkeys(blocked_by))
 
         tickets.append(
-            Ticket(key=key, summary=summary, blocks=blocks, blocked_by=blocked_by)
+            Ticket(
+                key=key,
+                summary=summary,
+                issue_type=issue_type,
+                blocks=blocks,
+                blocked_by=blocked_by,
+            )
         )
 
     if not tickets:

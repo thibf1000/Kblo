@@ -40,24 +40,37 @@ ajouté automatiquement.
 
 ## Format du CSV attendu
 
-Colonnes minimales :
-- **Issue Key** (ou `Key`)
-- **Summary** (ou `Title`)
-- Au moins une colonne contenant les mots `Blocks`, `Blocked By` ou
-  `Linked Issues`.
+Colonnes reconnues (EN ou FR) :
 
-Exemple minimal :
+| Rôle            | Anglais                                       | Français                                                      |
+| --------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| Clé             | `Issue Key`, `Key`                            | `Clé de ticket`                                               |
+| Résumé          | `Summary`, `Title`                            | `Résumé`                                                      |
+| Type (optionnel)| `Issue Type`, `Type`                          | `Type de ticket`                                              |
+| Blocks (sortant)| `Outward issue link (Blocks)`, `Blocks`       | `Lien de ticket sortant (Blocks)`                             |
+| Blocked by      | `Inward issue link (Blocks)`, `Is blocked by` | `Lien du ticket entrant (Blocks)`                             |
+
+Les colonnes dupliquées (plusieurs liens pour un même ticket) sont
+gérées — que pandas les renomme en `.1`, `.2`… ou que Jira les exporte
+avec un suffixe `_N`.
+
+Exemple minimal (FR, format Jira réel — voir
+[examples/jira_export_sample.csv](examples/jira_export_sample.csv)) :
 
 ```csv
-Issue Key,Summary,Linked Issues
-PROJ-1,Login bug,PROJ-2 blocks this
-PROJ-2,Auth refactoring,
-PROJ-3,Database migration,PROJ-1 blocks this
+Résumé,Clé de ticket,Type de ticket,Lien du ticket entrant (Blocks),Lien de ticket sortant (Blocks)
+Auth refactoring,PROJ-2,Story,,PROJ-1
+Login bug,PROJ-1,Task,PROJ-2,PROJ-3
+Database migration,PROJ-3,Task,PROJ-1,
 ```
 
-Kblo reconnaît aussi les colonnes dédiées typiques de Jira :
-`Outward issue link (Blocks)`, `Inward issue link (Blocks)`, etc. — et
-leurs doublons.
+## Rendu visuel
+
+- **Tickets standard** (Story, Task, Bug…) : bordure noire.
+- **Epics** : bordure bleue épaisse, pour se repérer d'un coup d'œil.
+- **Flèches** : du bloqueur vers le bloqué (top → bottom).
+- **Liens cliquables** : clic sur un rectangle → ouverture du ticket
+  sur `{jira_domain}/browse/{KEY}`.
 
 ## Structure du projet
 

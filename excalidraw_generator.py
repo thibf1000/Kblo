@@ -25,8 +25,24 @@ import time
 import uuid
 from pathlib import Path
 
+from csv_parser import Ticket
 from graph_builder import DepGraph
 from layout_engine import Box
+
+
+# Palette Excalidraw officielle — on s'aligne sur leurs valeurs pour rester
+# cohérent si l'utilisateur édite ensuite le diagramme.
+STROKE_DEFAULT = "#1e1e1e"  # noir « Excalidraw »
+STROKE_EPIC = "#1971c2"     # bleu « Excalidraw »
+
+
+def stroke_color_for(ticket: Ticket) -> str:
+    """Couleur de bordure du rectangle selon le type de ticket.
+
+    Les Epics sont bleus pour se détacher visuellement ; les autres
+    types (Story, Task, Bug, Enabler…) restent noirs.
+    """
+    return STROKE_EPIC if ticket.is_epic else STROKE_DEFAULT
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +71,7 @@ def _base_element(
     y: float,
     width: float,
     height: float,
-    stroke_color: str = "#1e1e1e",
+    stroke_color: str = STROKE_DEFAULT,
     background_color: str = "#ffffff",
     link: str | None = None,
 ) -> dict:
@@ -101,16 +117,27 @@ def _truncate(summary: str, max_len: int = 40) -> str:
 # Éléments
 # ---------------------------------------------------------------------------
 
-def _make_rectangle(box: Box, link: str) -> dict:
-    """Rectangle cliquable pour un ticket."""
-    return _base_element(
+def _make_rectangle(box: Box, link: str, stroke_color: str, epic: bool = False) -> dict:
+    """Rectangle cliquable pour un ticket.
+
+    Args:
+        box: Position et taille calculées par le layout engine.
+        link: URL Jira à associer (clic sur le rectangle).
+        stroke_color: Couleur de bordure (dépend du type de ticket).
+        epic: Si True, utilise un trait épais pour accentuer les Epics.
+    """
+    rect = _base_element(
         "rectangle",
         x=box.x,
         y=box.y,
         width=box.width,
         height=box.height,
+        stroke_color=stroke_color,
         link=link,
     )
+    if epic:
+        rect["strokeWidth"] = 2
+    return rect
 
 
 def _make_text(box: Box, container_id: str, content: str) -> dict:
@@ -215,7 +242,8 @@ def generate_excalidraw(
     for key, box in layout.items():
         ticket = graph.nodes[key]
         link = f"{jira_domain}/browse/{key}"
-        rect = _make_rectangle(box, link=link)
+        stroke = stroke_color_for(ticket)
+        rect = _make_rectangle(box, link=link, stroke_color=stroke, epic=ticket.is_epic)
         elements.append(rect)
         rect_by_key[key] = rect
 
